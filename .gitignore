@@ -1,13 +1,10 @@
 
 __pycache__/formatter.cpython-35.pyc
 tw-data.neg
+tw-data.pos
+__pycache_/prep.cpython-35.pyc
 vocab.csv
 vocab_inv.csv
-tw-data.pos
+
 Sentiment Analysis Dataset_backup.csv
 Sentiment Analysis Dataset.csv
-Sentiment Analysis Dataset.csv
-Sentiment Analysis Dataset.csv
-__pycache__/formatter.cpython-36.pyc
-label.csv
-sentence.csv

@@ -96,4 +96,4 @@ def build_vocab(dataset_fraction,tofile=False):
 
 
 #create_sets()
-build_vocab(0.25)
+#build_vocab(0.25)
