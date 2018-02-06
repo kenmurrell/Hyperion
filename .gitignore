@@ -8,3 +8,6 @@ Sentiment Analysis Dataset_backup.csv
 Sentiment Analysis Dataset.csv
 Sentiment Analysis Dataset.csv
 Sentiment Analysis Dataset.csv
+__pycache__/formatter.cpython-36.pyc
+label.csv
+sentence.csv

@@ -32,6 +32,3 @@ def load(hashtag,items):
 def get():
     tweet_list = json.load(open('imports.json', 'r' ) )
     return tweet_list
-
-# for i in tweet_list[:]:
-#     print(i)

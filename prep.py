@@ -9,8 +9,12 @@ import numpy
 MAIN_DATASET_PATH = "Sentiment Analysis Dataset.csv"
 POS_DATASET_PATH = 'tw-data.pos'
 NEG_DATASET_PATH = 'tw-data.neg'
+
 VOC_PATH = 'vocab.csv'
 VOC_INV_PATH = 'vocab_inv.csv'
+SENTENCE_PATH = 'sentence.csv'
+LABEL_PATH = 'label.csv'
+padding_word="<PAD/>"
 
 
 #Divides the dataset into positive and negative datasets
@@ -39,7 +43,7 @@ def create_sets():
     print("DONE\nP errors: "+str(e_p)+"\nN errors: "+str(e_n))
 
 #Builds the vocabulary tree
-def build_vocab(dataset_fraction,padding_word="<PAD/>"):
+def build_vocab(dataset_fraction,tofile=False):
     positive_examples = list(open(POS_DATASET_PATH).readlines())
     positive_examples = [s.strip() for s in positive_examples]
     negative_examples = list(open(NEG_DATASET_PATH).readlines())
@@ -70,15 +74,26 @@ def build_vocab(dataset_fraction,padding_word="<PAD/>"):
     word_counts = Counter(itertools.chain(*sentences))
     vocabulary_inv = [x[0] for x in word_counts.most_common()]
     vocabulary = {x: i for i, x in enumerate(vocabulary_inv)}
+    if(tofile):
+        print("Writing to file...")
+        voc = csv.writer(open(VOC_PATH, 'w'))
+        voc_inv = csv.writer(open(VOC_INV_PATH, 'w'))
+        sntc = csv.writer(open(SENTENCE_PATH, 'w'))
+        lbl = csv.writer(open(LABEL_PATH,'w'))
+        print("-->vocabulary vector space map:")
+        for key, val in tqdm(vocabulary.items(), total=len(vocabulary.items())):
+            voc.writerow([key, val])
+        print("-->inv vocabulary vector space map:")
+        for val in tqdm(vocabulary_inv, total=len(vocabulary_inv)):
+            voc_inv.writerow([val])
+        print("DONE")
+        return 0,0,0,0;
+    else:
+        x = numpy.array([[vocabulary[word] for word in sentence]
+                      for sentence in sentences])
+        y = numpy.array(labels)
+        return x,y,vocabulary, vocabulary_inv
 
-    print("Writing to file...")
-    voc = csv.writer(open(VOC_PATH, 'w'))
-    voc_inv = csv.writer(open(VOC_INV_PATH, 'w'))
-    for key, val in vocabulary.items():
-        voc.writerow([key, val])
-    for val in vocabulary_inv:
-        voc_inv.writerow([val])
 
-
-create_sets()
+#create_sets()
 build_vocab(0.25)
