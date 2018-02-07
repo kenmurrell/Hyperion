@@ -6,6 +6,25 @@ import os
 import time
 import random
 import sys
+import json
+
+X_PATH = 'xfile.npy'
+Y_PATH = 'yfile.npy'
+VOC_PATH = 'vocab.json'
+padding_word="<PAD/>"
+
+def batch_iter(data, batch_size, num_epochs):
+    data = np.array(data)
+    data_size = len(data)
+    num_batches_per_epoch = int(len(data)/batch_size) + 1
+    for epoch in range(num_epochs):
+        # Shuffle the data at each epoch
+        shuffle_indices = np.random.permutation(np.arange(data_size))
+        shuffled_data = data[shuffle_indices]
+        for batch_num in range(num_batches_per_epoch):
+            start_index = batch_num * batch_size
+            end_index = min((batch_num + 1) * batch_size, data_size)
+            yield shuffled_data[start_index:end_index]
 
 def weight_variable(shape, name):
     var = tf.truncated_normal(shape, stddev=0.1)
@@ -14,31 +33,6 @@ def weight_variable(shape, name):
 def bias_variable(shape, name):
     var = tf.constant(0.1, shape=shape)
     return tf.Variable(var, name=name)
-
-def human_readable_output(a_batch):
-    print('Network output on random data...')
-    sentences = zip(*a_batch)[0]
-    word_sentence = []
-    network_result = sess.run(tf.argmax(network_out, 1),feed_dict={data_in: zip(*a_batch)[0],dropout_keep_prob: 1.0})
-    actual_result = sess.run(tf.argmax(data_out, 1),feed_dict={data_out: zip(*a_batch)[1]})
-    # Translate the string to ASCII (remove <PAD/> symbols)
-    for s in sentences:
-        output = ''
-        for w in s:
-            output += vocabulary_inv[w.astype(np.int)][0] + ' '
-        output = output.translate(None, '<PAD/>')
-        word_sentence.append(output)
-    # Output the network result
-    for idx, item in enumerate(network_result, start=0):
-        network_sentiment = 'POS' if item == 1 else 'NEG'
-        actual_sentiment = 'POS' if actual_result[idx] == 1 else 'NEG'
-
-        if item == actual_result[idx]:
-            status = '\033[92mCORRECT\033[0m'
-        else:
-            status = '\033[91mWRONG\033[0m'
-
-        print('\n%s\nLABEL: %s - OUTPUT %s | %s' %(word_sentence[idx], actual_sentiment, network_sentiment, status))
 
 def evaluate_sentence(sentence, vocabulary):
     x_to_eval = string_to_int(sentence, vocabulary, max(len(_) for _ in x))
@@ -56,10 +50,12 @@ option = sys.argv[1]
 
 CHECKPOINT_FILE_PATH = 'ckpt.ckpt'
 
-# Load data
-x, y, vocabulary, vocabulary_inv = prep.build_vocab(0.25)
-
-# Randomly shuffle data
+# Load & shuffle data
+print("Loading test data...")
+#Sprep.build_vocab(0.25)
+vocabulary = json.load(open(VOC_PATH))
+x = np.load(X_PATH)
+y = np.load(Y_PATH)
 np.random.seed(123)
 shuffle_indices = np.random.permutation(np.arange(len(y)))
 x_shuffled = x[shuffle_indices]
@@ -72,7 +68,7 @@ y_train, y_test = y_shuffled[:-test_index], y_shuffled[-test_index:]
 
 # Parameters
 filter_sizes = '3,4,5'
-batch_sizes = 128
+batch_size = 128
 valid_freq = 1
 checkpoint_freq = 1
 
@@ -80,17 +76,16 @@ sequence_length = x_train.shape[1]
 num_classes = y_train.shape[1]
 vocab_size = len(vocabulary)
 filter_sizes = map(int, filter_sizes.split(','))
-validate_every = len(y_train) / (batch_sizes * valid_freq)
-checkpoint_every = len(y_train) / (batch_sizes * checkpoint_freq)
-
-# Set computation device
-#device = '/gpu:0'
-device = '/cpu:0'
+validate_every = len(y_train) / (batch_size * valid_freq)
+checkpoint_every = len(y_train) / (batch_size * checkpoint_freq)
 
 #Session
 sess = tf.InteractiveSession()
-
+# Set computation device
+#device = '/gpu:0'
+device = '/cpu:0'
 #Network
+print("Building network...")
 with tf.device(device):
     # Placeholders
     data_in = tf.placeholder(tf.int32, [None, sequence_length], name='data_in')
@@ -163,12 +158,13 @@ if option=='load':
         print('Error!')
         sess.run(tf.global_variables_initializer())
 else:
-    print('Data processing OK, creating network...')
+    print('Initializing...')
     sess.run(tf.global_variables_initializer())
 
 #TRAINING
 if option=='train':
     # Batches
+    print(zip(x_train, y_train))
     epochs =3
     batches = batch_iter(zip(x_train, y_train), batch_size, epochs)
     test_batches = list(batch_iter(zip(x_test, y_test), batch_size, 1))
