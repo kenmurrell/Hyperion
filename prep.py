@@ -7,17 +7,17 @@ import itertools
 import numpy as np
 import json
 
-MAIN_DATASET_PATH = "Sentiment Analysis Dataset.csv"
-# POS_DATASET_PATH = 'tw-data.pos'
-# NEG_DATASET_PATH = 'tw-data.neg'
-POS_DATASET_PATH = 'rt-polarity.pos'
-NEG_DATASET_PATH = 'rt-polarity.neg'
+MAIN_DATASET_PATH = "./datasets/Sentiment Analysis Dataset.csv"
+# POS_DATASET_PATH = './datasets/tw-data.pos'
+# NEG_DATASET_PATH = './datasets/tw-data.neg'
+POS_DATASET_PATH = './datasets/rt-polarity.pos'
+NEG_DATASET_PATH = './datasets/rt-polarity.neg'
 
 
 #Divides the dataset into positive and negative datasets
 def create_sets():
-    pos_dataset = open("tw-data.pos", "w")
-    neg_dataset = open("tw-data.neg", "w")
+    pos_dataset = open(POS_DATASET_PATH, "w")
+    neg_dataset = open(NEG_DATASET_PATH, "w")
 
     with open(MAIN_DATASET_PATH, "r",encoding='UTF-8') as dataset:
         lines = [n for n in dataset]
@@ -55,7 +55,7 @@ def batch_iter(data, batch_size, num_epochs, shuffle=True):
             end_index = min((batch_num + 1) * batch_size, data_size)
             yield shuffled_data[start_index:end_index]
 
-def load_data():
+def load__training_data():
     positive_text = list(open(POS_DATASET_PATH).readlines())
     positive_text = [s.strip() for s in positive_text]
     negative_text = list(open(NEG_DATASET_PATH).readlines())
@@ -66,5 +66,13 @@ def load_data():
     labels = np.concatenate([positive_labels, negative_labels], 0)
     return text, labels
 
-#create_sets()
-#build_vocab(0.25)
+def load_test_data(filename):
+    out = []
+    with open(filename, 'r', encoding='UTF-8') as dataset:
+        lines = [n for n in dataset]
+    for sample in tqdm(csv.reader(lines), total=len(lines)):
+        sample = fmt.all(sample[0].strip())
+        out.append(sample)
+    return out;
+
+create_sets()

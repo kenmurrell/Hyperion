@@ -1,10 +1,8 @@
-tw-data.neg
-tw-data.pos
-Sentiment Analysis Dataset_backup.csv
-Sentiment Analysis Dataset.csv
+test.py
 
 tests/
 runs/
+datasets/
 
 *.npy
 *.json
