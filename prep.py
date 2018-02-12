@@ -8,13 +8,10 @@ import numpy as np
 import json
 
 MAIN_DATASET_PATH = "Sentiment Analysis Dataset.csv"
-POS_DATASET_PATH = 'tw-data.pos'
-NEG_DATASET_PATH = 'tw-data.neg'
-
-X_PATH = 'xfile'
-Y_PATH = 'yfile'
-VOC_PATH = 'vocab.json'
-padding_word="<PAD/>"
+# POS_DATASET_PATH = 'tw-data.pos'
+# NEG_DATASET_PATH = 'tw-data.neg'
+POS_DATASET_PATH = 'rt-polarity.pos'
+NEG_DATASET_PATH = 'rt-polarity.neg'
 
 
 #Divides the dataset into positive and negative datasets
