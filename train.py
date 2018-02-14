@@ -2,14 +2,12 @@ import tensorflow as tf
 import numpy as np
 import os
 import time
-import datetime
 import prep
 import text_cnn
 from tensorflow.contrib import learn
 from tqdm import tqdm
-import time
 
-tf.flags.DEFINE_float("dev_sample_percentage", .1, "Percentage of the training data to use for validation")
+tf.flags.DEFINE_float("dev_sample_percentage", .05, "Percentage of the training data to use for validation")
 tf.flags.DEFINE_boolean("allow_soft_placement", True, "Allow device soft device placement")
 tf.flags.DEFINE_boolean("log_device_placement", False, "Log placement of ops on devices")
 # Model Hyperparameters
@@ -24,7 +22,6 @@ tf.flags.DEFINE_integer("num_epochs", 200, "Number of training epochs (default: 
 tf.flags.DEFINE_integer("evaluate_every", 500, "Evaluate model on dev set after this many steps (default: 100)")
 tf.flags.DEFINE_integer("checkpoint_every", 500, "Save model after this many steps (default: 100)")
 tf.flags.DEFINE_integer("num_checkpoints", 3, "Number of checkpoints to store (default: 5)")
-
 FLAGS = tf.flags.FLAGS
 
 # Load data
@@ -68,12 +65,9 @@ with tf.Graph().as_default():
         grads_and_vars = optimizer.compute_gradients(cnn.loss)
         train_op = optimizer.apply_gradients(grads_and_vars, global_step=global_step)
 
-        # Output directory for models and summaries
+        #Set directories
         timestamp = time.strftime("%m%d-%H%M%S", time.localtime())
         out_dir = os.path.abspath(os.path.join(os.path.curdir, "runs", timestamp))
-        print("Writing to {}\n".format(out_dir))
-
-        # Checkpoint directory. Tensorflow assumes this directory already exists so we need to create it
         checkpoint_dir = os.path.abspath(os.path.join(out_dir, "checkpoints"))
         checkpoint_prefix = os.path.join(checkpoint_dir, "model")
         if not os.path.exists(checkpoint_dir):
@@ -94,6 +88,7 @@ with tf.Graph().as_default():
                 cnn.dropout_keep_prob: FLAGS.dropout_keep_prob }
             _, step, loss, accuracy = sess.run( [train_op, global_step, cnn.loss, cnn.accuracy], feed_dict)
             print("step {}, loss {:g}, acc {:g}".format(step, loss, accuracy))
+
         #Evaluates the model while training
         def dev_step(x_batch, y_batch):
             feed_dict = {
@@ -104,8 +99,27 @@ with tf.Graph().as_default():
             time_str = time.strftime("%y-%m-%d-%H:%M:%S", time.localtime())
             print("{}: step {}, loss {:g}, acc {:g}".format(time_str, step, loss, accuracy))
 
-        # Generate batches
-        batches = prep.batch_iter(list(zip(x_train, y_train)), FLAGS.batch_size, FLAGS.num_epochs)
+        #Generates a generator containing batches of training data
+        def batch_iter(data, batch_size, num_epochs, shuffle=True):
+            data = np.array(data)
+            data_size = len(data)
+            num_batches_per_epoch = int((len(data)-1)/batch_size) + 1
+            for epoch in range(num_epochs):
+                # Shuffle the data at each epoch
+                if shuffle:
+                    shuffle_indices = np.random.permutation(np.arange(data_size))
+                    shuffled_data = data[shuffle_indices]
+                else:
+                    shuffled_data = data
+                for batch_num in range(num_batches_per_epoch):
+                    start_index = batch_num * batch_size
+                    end_index = min((batch_num + 1) * batch_size, data_size)
+                    yield shuffled_data[start_index:end_index]
+
+        print("\nWriting to {}\n".format(out_dir))
+        print("Training...")
+        batches = batch_iter(list(zip(x_train, y_train)), FLAGS.batch_size, FLAGS.num_epochs)
+
         # Training loop
         for batch in batches:
             x_batch, y_batch = zip(*batch)

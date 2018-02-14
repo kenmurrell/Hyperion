@@ -7,55 +7,35 @@ import itertools
 import numpy as np
 import json
 
-MAIN_DATASET_PATH = "./datasets/Sentiment Analysis Dataset.csv"
-# POS_DATASET_PATH = './datasets/tw-data.pos'
-# NEG_DATASET_PATH = './datasets/tw-data.neg'
+MAIN_DATASET_PATH = "./datasets/RottenTomatoesSentiments.csv"
 POS_DATASET_PATH = './datasets/rt-polarity.pos'
 NEG_DATASET_PATH = './datasets/rt-polarity.neg'
 
-
 #Divides the dataset into positive and negative datasets
 def create_sets():
-    pos_dataset = open(POS_DATASET_PATH, "w")
-    neg_dataset = open(NEG_DATASET_PATH, "w")
-
-    with open(MAIN_DATASET_PATH, "r",encoding='UTF-8') as dataset:
-        lines = [n for n in dataset]
     print("Creating datasets...")
-    e_p =0
-    e_n =0
-    for line in tqdm(csv.reader(lines), total=len(lines)):
-        tweet = line[3].strip()
-        tweet = fmt.all(tweet)
-        if line[1].strip() == '1':
-            try:
-                pos_dataset.write(tweet.strip()+'\n')
-            except UnicodeEncodeError:
-                e_p+=1
-        else:
-            try:
-                neg_dataset.write(tweet.strip()+'\n')
-            except UnicodeEncodeError:
-                e_n+=1
-    print("DONE\nP errors: "+str(e_p)+"\nN errors: "+str(e_n))
+    with open(MAIN_DATASET_PATH, "r",encoding='UTF-8') as dataset, open(POS_DATASET_PATH, "w") as pos, open(NEG_DATASET_PATH, "w") as neg:
+        e_p =0
+        e_n =0
+        dataset_reader = csv.reader(dataset, delimiter=',')
+        tweets = list(dataset_reader)
+        for tweet in tqdm(tweets):
+            tweet[1] = tweet[1].strip()
+            tweet[1] = fmt.all(tweet[1])
+            if tweet[0].strip()=='1':
+                try:
+                    pos.write(tweet[1].strip()+'\n')
+                except Exception:
+                    e_p+=1
+            else:
+                try:
+                    neg.write(tweet[1].strip()+'\n')
+                except Exception:
+                    e_n+=1
+        print("DONE\nP errors: "+str(e_p)+"\nN errors: "+str(e_n))
 
-def batch_iter(data, batch_size, num_epochs, shuffle=True):
-    data = np.array(data)
-    data_size = len(data)
-    num_batches_per_epoch = int((len(data)-1)/batch_size) + 1
-    for epoch in range(num_epochs):
-        # Shuffle the data at each epoch
-        if shuffle:
-            shuffle_indices = np.random.permutation(np.arange(data_size))
-            shuffled_data = data[shuffle_indices]
-        else:
-            shuffled_data = data
-        for batch_num in range(num_batches_per_epoch):
-            start_index = batch_num * batch_size
-            end_index = min((batch_num + 1) * batch_size, data_size)
-            yield shuffled_data[start_index:end_index]
-
-def load__training_data():
+#Loads training data from their datasets
+def load_training_data():
     positive_text = list(open(POS_DATASET_PATH).readlines())
     positive_text = [s.strip() for s in positive_text]
     negative_text = list(open(NEG_DATASET_PATH).readlines())
@@ -66,13 +46,15 @@ def load__training_data():
     labels = np.concatenate([positive_labels, negative_labels], 0)
     return text, labels
 
+#Loads test data from thei datasets
 def load_test_data(filename):
-    out = []
-    with open(filename, 'r', encoding='UTF-8') as dataset:
-        lines = [n for n in dataset]
-    for sample in tqdm(csv.reader(lines), total=len(lines)):
-        sample = fmt.all(sample[0].strip())
-        out.append(sample)
+    print("Reading data...")
+    out=[]
+    with open(filename, 'r', encoding='ISO-8859-1') as dataset:
+        dataset_reader = csv.reader(dataset, delimiter=',')
+        tweets = list(dataset_reader)
+        for tweet in tqdm(tweets):
+            tweet[0] = tweet[0].strip()
+            tweet[0] = fmt.all(tweet[0])
+            out.append(tweet[0])
     return out;
-
-create_sets()

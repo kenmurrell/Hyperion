@@ -1,9 +1,9 @@
-test.py
 
 tests/
-runs/
 datasets/
+runs/
 
 *.npy
 *.json
 *.pyc
+*.csv
