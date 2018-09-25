@@ -3,6 +3,8 @@ tests/
 datasets/
 runs/
 
+test.py
+
 *.npy
 *.json
 *.pyc
